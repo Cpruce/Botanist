@@ -9,7 +9,7 @@ The name Botanist was chosen for several attributes.
 
 1. Brevity
 2. Relevance to categorization
-3. Homage to growing software through tools
+3. Homage to growing software 
 
 ### Dependencies
 
