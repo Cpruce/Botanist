@@ -71,8 +71,8 @@ def make_sig(options):
             idx = 0
             for i in method.get_instructions():
                 if options.verbose:
-                    print "\t", "%x" % idx, i.get_name(), i.get_output()
-
+                    print "\t", "%x" % idx, i.get_name(), i.get_output(), i.get_op_value()
+                    
                 idx += i.get_length()
 
                 # follow the trail
