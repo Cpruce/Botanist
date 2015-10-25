@@ -13,7 +13,12 @@ The name Botanist was chosen for several attributes.
 
 ### Dependencies
 
-Botanist uses Androguard, currently using v2.0. Download the zip file and setup build/install.
+Botanist uses:
+
+* Androguard, currently using stable release v2.0 aka version 3.0. Download the zip file and setup build/install.
+* Elfesteem
+* Miasm PE_helper https://github.com/cea-sec/miasm
+
 
 ### Components
 
