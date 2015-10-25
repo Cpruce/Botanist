@@ -15,9 +15,8 @@ The name Botanist was chosen for several attributes.
 
 Botanist uses:
 
-* Androguard, currently using stable release v2.0 aka version 3.0. Download the zip file and setup build/install.
-* Elfesteem
-* Miasm PE_helper https://github.com/cea-sec/miasm
+* Androguard, currently using stable release v2.0 aka version 3.0, for apk/dex analysis
+* pyelftools for elf analysis
 
 
 ### Components
