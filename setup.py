@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys
+
 from setuptools import setup, find_packages
 
 
@@ -14,8 +14,13 @@ def try_build():
             name = 'botanist',
             version = '1.0',
             packages = find_packages(),
-            scripts = ['tagger.py', 'classifier.py', ],
-            #install_requires=['python-mysql', 'androguard',],
+            scripts = ['bottools/tag/Tagger.py', 'bottools/classify/Classifier.py', 'bottools/control/Controller.py', ],
+            platforms='Cross Platform',
+            classifiers = [
+                        'Programming Language :: Python :: 2',
+                        'Programming Language :: Python :: 3',
+                        ],
+
         )
     except SystemExit, e:
         print repr(e)
@@ -25,6 +30,7 @@ def try_build():
         print 'Build success'
     else:
         print 'Build failed'
+        #install_requires=['python-mysql', 'androguard',],
 
 
 try_build()

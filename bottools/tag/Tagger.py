@@ -107,7 +107,7 @@ def make_sig(options):
     # get MainActivity
     main_act = a.get_main_activity().replace(".", "/")
 
-    # find the DLL
+    # find the tools
     for method in d.get_methods():
         #if "LoadApplication" in method.name:
         #    print method.show_xref()
@@ -120,18 +120,18 @@ def make_sig(options):
         # if signature is of the LoadApplication method
         if "loadLibrary" in method.get_source():
             sig = ""
-            
+
             for i in method.get_instructions():
                 sig+=str(i.get_op_value()) + " "
                 #print i.get_op_value(),
 
-            
+
             print sig
 
             # there might be more though...
             # this also might not be the right way to find tools
             break
- 
+
         """idx = 0
         for i in method.get_instructions():
             if options.verbose:

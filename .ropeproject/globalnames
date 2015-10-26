@@ -1,3 +1,4 @@
-€}q(U	apkTagger]q(UmainqUoptionqUmake_sigqUparserqUparamqU	argumentsqUget_soq	Uoption_0q
-Uoption_1qUoptionsqeUsetup]qU	try_buildqaUtagger]q(UmainqUoptionqUmake_sigqUparserqUparamqU	argumentsqUget_soqUoption_0qUoption_1qUoptionsqeU
-classifier]q(U	table_addqhhhUtapered_levenshteinqUcluster_addqhhhhheu.
+€}q(Ubottools.classify]Ubottools]Ubottools.classify.Classifier]q(UmainqUoptionqUparserqUparamqU	argumentsqUoption_2qUoption_3q	Uoption_0q
+Uoption_1qUoptionsqeUbottools.tag]Ubottools.control]Usetup]qU	try_buildqaUbottools.control.Controller]q(U	table_addqUtest_and_connectqUtapered_levenshteinqUcreate_tableqUfind_placementqU	has_tableqUfind_clusterqeUbottools.tag.Tagger]q(hhUmake_sigqhhhUget_soqh
+hheUtagger]q(UmainqUoptionqUmake_sigqUparserqUparamqU	argumentsq Uget_soq!Uoption_0q"Uoption_1q#Uoptionsq$eU	apkTagger]q%(Umainq&Uoptionq'Umake_sigq(Uparserq)Uparamq*U	argumentsq+Uget_soq,Uoption_0q-Uoption_1q.Uoptionsq/eU
+classifier]q0(hhhUtapered_levenshteinq1Ucluster_addq2hh"h#h$h eu.
