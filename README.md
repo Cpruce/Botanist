@@ -28,8 +28,8 @@ Botanist uses:
 
 ### Setup
 
-Go into <i> classifier.py </i> and change the credentials to your login
+1. Go into <i> classifier.py </i> and change the credentials to your login
    information
-<c> sudo python setup.py install </c>
-<c> python tagger.py -f test/Xamarin/com.revengdroid.XamarinHelloWorld.apk | python classifier.py </c>
+2. ```sudo python setup.py install ```
+3. ```python bottools/tag/Tagger.py -f test/Xamarin/com.revengdroid.XamarinHelloWorld.apk | python bottools/classify/Classifier.py```
 
