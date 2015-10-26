@@ -16,10 +16,12 @@ The name Botanist was chosen for several attributes.
 Botanist uses:
 
 * Androguard, currently using stable release v2.0 aka version 3.0, for apk/dex analysis
-* pyelftools for elf analysis
+* MySQL for non-volatile storage of clusters
+* python-mysql for interaction with past instances and storing purposes
 
 
 ### Components
 
-1. apkTagger.py - this program creates the set of signatures
-2. 
+1. tagger.py - this program creates the set of signatures
+2. classifier.py - this program adds signatures to the db if doesn't already
+   exist and assigns a cluster
