@@ -15,7 +15,7 @@ def try_build():
             version = '1.0',
             packages = find_packages(),
             scripts = ['tagger.py', 'classifier.py', ],
-            install_requires=['pydot', 'MySQLdb', 'androguard',],
+            #install_requires=['python-mysql', 'androguard',],
         )
     except SystemExit, e:
         print repr(e)
