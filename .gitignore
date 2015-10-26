@@ -1,0 +1,4 @@
+# Build specific items
+botanist.egg-info/
+build/
+dist/
