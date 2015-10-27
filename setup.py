@@ -14,7 +14,7 @@ def try_build():
             name = 'botanist',
             version = '1.0',
             packages = find_packages(),
-            scripts = ['bottools/tag/Tagger.py', 'bottools/classify/Classifier.py', 'bottools/control/Controller.py', ],
+            scripts = ['bottools/tag/DexTagger.py', 'bottools/tag/ElfTagger.py', 'bottools/classify/Classifier.py', 'bottools/control/Controller.py', ],
             platforms='Cross Platform',
             classifiers = [
                         'Programming Language :: Python :: 2',

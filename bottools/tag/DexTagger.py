@@ -32,6 +32,8 @@ from androguard.session import Session
 from androguard.util import *
 from androguard.misc import *
 
+from capstone import *
+
 option_0 = {
     'name': ('-f', '--file'),
     'help': 'filename input (APK or android resources(arsc))',
