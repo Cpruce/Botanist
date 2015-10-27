@@ -22,14 +22,12 @@ Botanist uses:
 
 ### Components
 
-1. <i> tagger.py </i> - this program creates the set of signatures
-2. <i> classifier.py </i> - this program adds signatures to the db if doesn't already
-   exist and assigns a cluster
+1. <i> Tagger.py </i> - creates the set of signatures
+2. <i> Classifier.py </i> - provides the interface between the Tagger and Controller
+3. <i> Controller.py </i> - adds signatures to the db if doesn't already exist and assigns a cluster
 
 ### Setup
 
-1. Go into <i> classifier.py </i> and change the credentials to your login
-   information
-2. ```sudo python setup.py install ```
-3. ```python bottools/tag/Tagger.py -f test/Xamarin/com.revengdroid.XamarinHelloWorld.apk | python bottools/classify/Classifier.py```
+1. ```sudo python setup.py install```
+2. ```python bottools/tag/Tagger.py -f test/Xamarin/com.revengdroid.XamarinHelloWorld.apk | python bottools/classify/Classifier.py -u {USERNAME} -p {PASSWORD}```
 
