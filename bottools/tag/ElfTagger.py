@@ -48,54 +48,72 @@ option_1 = {
 
 options = [option_0, option_1]
 
+def get_method_from_instr(instr_args):
+    method = ''
+    i = 0
+    while instr_args[i] != 'L':
+        i+=1
+    return instr_args[i:]
+
+def get_stub_method(i, type_sig, d, dx):
+
+    if 'invoke' in i.get_name():
+
+        meth_call = get_method_from_instr(type_sig)
+
+        for n_method in get_NativeMethods(dx):
+
+            meth = n_method[0] + '->' + n_method[1] + n_method[2]
+
+            if meth_call == meth:
+                # this is the first dynamic library call. From here, the
+                # analysis is transfered to finding this method's code
+                # in the .so.
+                # TODO: make sure that this native call is definitely
+                # the first call from THAT library
+
+
+                #print path[0], xrefto[0].name, n_method
+                cname = n_method[0][1:-1].replace('/', '_')  # remove OS type and semicolon
+                func = "Java_" + cname + "_" + n_method[1] #TODO: is Java always prepended?
+                # for mono: build's 'Java_mono_android_Runtime_init
+                print func
+                return 0
+
+    return -1
 
 def get_init(rname, method, d, dx):
     instructions = method.get_code().get_bc().get_instructions()
     rname_passed = False
     loadLib_passed = False
 
-    xrefs_to = method.XREFto.items
-
-
     for i in instructions:
-        lit = i.get_output()#.split()[1]
-        if rname in lit:
+        type_sig = i.get_output()
+
+        # first find the so
+        if rname in type_sig:
             rname_passed = True
             print 'real name passed'
+            continue
+        # next, find the the dynamic load
         if rname_passed:
-            if "loadLibrary" in lit:
+            if "loadLibrary" in type_sig:
                 loadLib_passed = True
                 print 'loadLibrary passed'
-                
+                continue
+        # after the lib load, the first native call to the loaded library will
+        # be the "unpacking" routine that will be used as the signature
         if loadLib_passed:
 
-            if 'invoke' in i.get_name():
+            val = get_stub_method(i, type_sig, d, dx)
+            if val == 0:
+                print 'native stub found'
+                break
+            elif val == 1:
+                print 'no stub found for dyna lib'
+                break
+            # else continue, first native call not found
 
-                #print i.get_name(), lit, rname, rname in lit
-
-                for n_method in get_NativeMethods(dx):
-                    #print lit, n_method
-                    if n_method[0] in lit:
-                        print lit, n_method
-                        #print path[0], xrefto[0].name, n_method
-                        cname = lit[0][1:-1].replace('/', '_')  # remove OS type and semicolon
-                        func = "Java_" + cname + "_" + i.get_name()#xrefto[0].name
-                        
-
-                """
-                for xrefto in xrefs_to:
-
-
-                    print xrefto[0].name, "||||||||", xrefto[1][0].get_dst(d.get_class_manager()), "|||||||", lit
-
-                    path = xrefto[1][0].get_dst(d.get_class_manager())
-                    #xrefto[1][0].show()
-                    for n_method in get_NativeMethods(dx):
-                        if path[0] in n_method:
-                            #print path[0], xrefto[0].name, n_method
-                            cname = path[0][1:-1].replace('/', '_')  # remove OS type and semicolon
-                            func = "Java_" + cname + "_" + xrefto[0].name
-                    """
 
     return ''
 
