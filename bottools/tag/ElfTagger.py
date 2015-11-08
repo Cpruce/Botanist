@@ -27,11 +27,12 @@ from androguard.core.bytecodes.apk import *
 from androguard.core.analysis.analysis import *
 from androguard.decompiler.decompiler import *
 from androguard.session import Session
-
 from androguard.util import *
 from androguard.misc import *
 
-from capstone import *
+from r2.r_core import RCore
+
+core = RCore()
 
 import subprocess
 
@@ -55,7 +56,7 @@ def get_method_from_instr(instr_args):
         i+=1
     return instr_args[i:]
 
-def get_stub_method(i, type_sig, d, dx):
+def get_stub_method(i, rname, type_sig, d, dx):
 
     if 'invoke' in i.get_name():
 
@@ -78,6 +79,7 @@ def get_stub_method(i, type_sig, d, dx):
                 func = "Java_" + cname + "_" + n_method[1] #TODO: is Java always prepended?
                 # for mono: build's 'Java_mono_android_Runtime_init
                 print func
+                parse_elf(rname, func)
                 return 0
 
     return -1
@@ -105,13 +107,13 @@ def get_init(rname, method, d, dx):
         # be the "unpacking" routine that will be used as the signature
         if loadLib_passed:
 
-            val = get_stub_method(i, type_sig, d, dx)
+            val = get_stub_method(i, rname, type_sig, d, dx)
             if val == 0:
                 print 'native stub found'
                 break
             elif val == 1:
                 print 'no stub found for dyna lib'
-                break
+                sys.exit(1)
             # else continue, first native call not found
 
 
@@ -135,15 +137,100 @@ def get_real_names(func):
 
     return rnames
 
+def get_func_start_addr(so, func):
+
+    # use the nm tool to dump the func addrs
+    # TODO: find out running the command is ok as opposed to a library call
+    cmd_dump_func_addrs = "nm -D " + so
+    process = subprocess.Popen(cmd_dump_func_addrs.split(), stdout=subprocess.PIPE)
+    output = process.communicate()[0]
+
+    # basically grep
+    lines = output.split('\n')
+    for line in lines:
+        if func in line:
+            return line.split()[0]
+
+    return ''
+
+
+def get_sig(so, func, func_start_addr):
+
+    # Capstone class for ARM architectures
+    #md = Cs(CS_ARCH_ARM64, CS_MODE_ARM)
+
+    func_start_addr_int = int(func_start_addr, 16)
+    func_start_addr_hex = hex(func_start_addr_int)
+    so_file = open(so, 'rb')
+    so_file_str = so_file.read()
+    so_file.close()
+
+    so_file = "./libmonodroid.so"
+    core.bin.load (so_file, 0)
+    print ("Supported archs: %d"%core.bin.narch)
+
+    if core.bin.narch>1:
+        for i in range (0,core.bin.narch):
+            core.bin.select_idx (i)
+            info = core.bin.get_info ()
+            if info:
+                print ("%d: %s %s"%(i,info.arch,info.bits))
+
+    # TODO: detect the architecture and set to that. Most will be 32-bit ARM
+    # Load file in core
+    core.config.set ("asm.arch", "arm");
+    core.config.set ("asm.bits", "32");
+    #core.config.set ("asm.bits", "64");
+
+    f = core.file_open(so_file, False, 0)
+    #core.bin_load (None)
+    core.bin_load ("", 0)
+    """entry_point = core.num.get("entry0")
+    print entry_point
+    sys.exit(1)
+    
+    print ("Entrypoint : 0x%x"%(entry_point))
+
+    for i in xrange(0, 20):
+        print ("%s"%(core.disassemble(entry_point+4*i).get_asm()))
+    """
+
+    entry_point = func_start_addr_int
+
+    print ("Entrypoint : 0x%x"%(entry_point))
+
+    for i in xrange(0, 20):
+        print ("%s"%(core.disassemble(entry_point+4*i).get_asm()))
+
+    #for string in core.bin.get_strings():
+    #    print ("0x%x 0x%x "%(string.vaddr, string.paddr))
+
+    #md = Cs(CS_ARCH_X86, CS_MODE_64) this prints instructions but it seems to be ARM
+
+    #CODE = b"\x55\x48\x8b\x05\xb8\x13\x00\x00"
+    #print func_start_addr_hex
+    #for i in md.disasm(CODE, 0x1000):
+    #    print("0x%x:\t%s\t%s" %(i.address, i.mnemonic, i.op_str))
+
+    #sys.exit(0)
+    #for (address, size, mnemonic, op_str) in md.disasm_lite(so_file_str, 0xea7c):#func_start_addr_hex):
+    #    print("0x%x:\t%s\t%s" %(address, mnemonic, op_str))
+
 
 def parse_elf(so, func):
 
-    cmd_get_func = "nm -D test/" + so + " | grep '" + func + "'"
+    so = 'lib' + so + '.so'
 
-    process = subprocess.Popen(cmd_get_func.split(), stdout=subprocess.PIPE)
+    func_start_addr = get_func_start_addr(so, func)
 
-    output = process.communicate()[0]
-    print output
+    if func_start_addr == '':
+        print 'stub function not found in .so file'
+        sys.exit(1)
+    else:
+        print 'stub func begins at ' + func_start_addr
+        sig = get_sig(so, func, func_start_addr)
+
+
 
 def dump_files(so, a):
     for fname in a.get_files():
