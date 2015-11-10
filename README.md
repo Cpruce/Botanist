@@ -13,6 +13,11 @@ The name Botanist was chosen for several attributes.
 2. Relevance to categorization
 3. Homage to growing software 
 
+Ideally, these clusters will be graphically displayed and tools can be viewed
+along with variations that exist in the wild. The main function takes in an APK
+and says what tools were used, if previously seen. This project assumes data on
+several instances and the ability to store instances for future reference.
+
 ### Dependencies
 
 Botanist uses:
