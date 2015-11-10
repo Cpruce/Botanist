@@ -32,9 +32,9 @@ from androguard.misc import *
 
 from r2.r_core import RCore
 
-core = RCore()
-
 import subprocess
+
+core = RCore()
 
 option_0 = {
     'name': ('-f', '--file'),
@@ -153,68 +153,60 @@ def get_func_start_addr(so, func):
 
     return ''
 
+def print_bin_info(rbin):
+    print ""
+    print ("Get info of %s " % (rbin.get_info().file))
+    print ("%s"%((12+len(rbin.file))*'-'))
+    print ("Type: %s " % (rbin.get_info().type))
+    print ("Bclass: %s " % (rbin.get_info().bclass))
+    print ("Rclass: %s " % (rbin.get_info().rclass))
+    print ("Machine: %s " % (rbin.get_info().machine))
+    print ("Arch: %s " % (rbin.get_info().arch))
+    print ("OS: %s " % (rbin.get_info().os))
+    print ""
 
-def get_sig(so, func, func_start_addr):
 
-    # Capstone class for ARM architectures
-    #md = Cs(CS_ARCH_ARM64, CS_MODE_ARM)
+def get_sig(so_file, func, func_start_addr):
 
-    func_start_addr_int = int(func_start_addr, 16)
-    func_start_addr_hex = hex(func_start_addr_int)
-    so_file = open(so, 'rb')
-    so_file_str = so_file.read()
-    so_file.close()
 
-    so_file = "./libmonodroid.so"
-    core.bin.load (so_file, 0)
-    print ("Supported archs: %d"%core.bin.narch)
+    # bin 'entry point' at core.num.get("entry0") but that is the start of the
+    # code section. Actual entry point is the first call to the library, usually
+    # the init method
+    entry_point = int(func_start_addr, 16)
 
-    if core.bin.narch>1:
-        for i in range (0,core.bin.narch):
-            core.bin.select_idx (i)
-            info = core.bin.get_info ()
-            if info:
-                print ("%d: %s %s"%(i,info.arch,info.bits))
 
     # TODO: detect the architecture and set to that. Most will be 32-bit ARM
+    # r2 already auto-detects architectures, os, etc. Does it do it for all
+    # android machines?
+
     # Load file in core
-    core.config.set ("asm.arch", "arm");
-    core.config.set ("asm.bits", "32");
+    #core.config.set ("asm.arch", "arm");
+    #core.config.set ("asm.bits", "32");
     #core.config.set ("asm.bits", "64");
 
     f = core.file_open(so_file, False, 0)
-    #core.bin_load (None)
     core.bin_load ("", 0)
     """entry_point = core.num.get("entry0")
-    print entry_point
-    sys.exit(1)
-    
-    print ("Entrypoint : 0x%x"%(entry_point))
-
-    for i in xrange(0, 20):
-        print ("%s"%(core.disassemble(entry_point+4*i).get_asm()))
     """
 
-    entry_point = func_start_addr_int
+    print_bin_info(core.bin)
 
-    print ("Entrypoint : 0x%x"%(entry_point))
+    print ("Creating signature of stub entrypoint: %s @ address 0x%x"%(func, entry_point))
+    print (51+len(func)+len(str(entry_point)))*'-'
 
-    for i in xrange(0, 20):
-        print ("%s"%(core.disassemble(entry_point+4*i).get_asm()))
+    # TODO: what if the function ends or transfers control before the first 40
+    # instructions? (Maybe check for BL something?)
+    for i in xrange(0, 40):
+        instr = core.disassemble(entry_point+4*i)
+        print ("%s. %s"%(instr.get_asm(), instr.get_hex()))
+        
+
+        scale = 16 ## equals to hexadecimal
+        num_of_bits = 32 ## size of instruction unless x64
+        print bin(int(instr.get_hex(), scale))[2:].zfill(num_of_bits) 
 
     #for string in core.bin.get_strings():
     #    print ("0x%x 0x%x "%(string.vaddr, string.paddr))
-
-    #md = Cs(CS_ARCH_X86, CS_MODE_64) this prints instructions but it seems to be ARM
-
-    #CODE = b"\x55\x48\x8b\x05\xb8\x13\x00\x00"
-    #print func_start_addr_hex
-    #for i in md.disasm(CODE, 0x1000):
-    #    print("0x%x:\t%s\t%s" %(i.address, i.mnemonic, i.op_str))
-
-    #sys.exit(0)
-    #for (address, size, mnemonic, op_str) in md.disasm_lite(so_file_str, 0xea7c):#func_start_addr_hex):
-    #    print("0x%x:\t%s\t%s" %(address, mnemonic, op_str))
 
 
 def parse_elf(so, func):
