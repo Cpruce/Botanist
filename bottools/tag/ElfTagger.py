@@ -17,6 +17,7 @@
 #   file handling and parsing in this program
 #   leverages the androguard framework.
 
+import os
 import sys
 from optparse import OptionParser
 from androguard.core import *
@@ -199,11 +200,11 @@ def get_sig(so_file, func, func_start_addr):
     for i in xrange(0, 40):
         instr = core.disassemble(entry_point+4*i)
         print ("%s. %s"%(instr.get_asm(), instr.get_hex()))
-        
+
 
         scale = 16 ## equals to hexadecimal
         num_of_bits = 32 ## size of instruction unless x64
-        print bin(int(instr.get_hex(), scale))[2:].zfill(num_of_bits) 
+        #print bin(int(instr.get_hex(), scale))[2:].zfill(num_of_bits)
 
     #for string in core.bin.get_strings():
     #    print ("0x%x 0x%x "%(string.vaddr, string.paddr))
@@ -223,11 +224,15 @@ def parse_elf(so, func):
         sig = get_sig(so, func, func_start_addr)
 
 
-
 def dump_files(so, a):
     for fname in a.get_files():
 
         if so in fname:
+            try:
+                os.remove(fname)
+            except OSError:
+                pass
+
             so_file = a.get_file(fname)
             fd = open(so,"w")
             print >> fd, so_file
