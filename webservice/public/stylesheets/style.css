@@ -1,0 +1,98 @@
+body {
+  padding: 30px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+h2 {
+	margin:0 0 .5em 0;
+}
+
+a {
+  color: #00B7FF;
+}
+
+#wrapper {
+	padding-left:312px;
+	position:relative;
+}
+
+#tlbr {
+    height:50px;
+}
+
+#userList {
+	margin:0 0 30px 0;
+}
+	#userList table {
+		border-collapse:separate;
+		border-spacing:1px;
+		background:#CCC;
+	}
+		#userList table th {
+			background:#EEE;
+			font-weight:600;
+			padding:10px 20px;
+			text-align:center;
+		}
+		#userList table tbody {
+			padding:0; margin:0;
+			border-collapse:collapse;
+			border-spacing:0px;
+		}
+			#userList table td {
+				background:#FFF;
+				padding:5px 10px;
+				text-align:center;
+			}
+
+#userInfo {
+	width:250px;
+	position:absolute;
+	top:0; left:0;
+}
+	#userInfo p {
+		padding:15px;
+		border:1px solid #CCC;
+		background:rgba(80,120,255,0.05);
+	}
+
+.prettyFile > input { display: none !important; }
+/*  The rest is from Twitter Bootstrap */
+input,
+.input-append { display: inline-block; vertica-align: middle; }
+ 
+.input-large {
+    border: 1px solid rgba(82, 168, 236, 0.8);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(82, 168, 236, .6);
+    border-radius: 3px 0 0 3px;
+    font-size: 14px;
+    height: 20px;
+    color: #555;
+    padding: 4px 6px;
+    margin-right: -4px;
+    width: 210px;
+}
+/*.btn {
+    background-image: -webkit-linear-gradient(top, white, #E6E6E6);
+    background-repeat: repeat-x;
+    border: 1px solid rgba(0, 0, 0, 0.14902);
+    box-shadow: rgba(255, 255, 255, 0.2) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.0470588) 0px 1px 2px 0px;
+    color: #333;
+    display: inline-block;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
+    margin: 0 0 0 -1px;
+    padding: 4px 14px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: rgba(255, 255, 255, 0.74902) 0px 1px 1px;
+    vertical-align: top;
+    width: 47px;
+}
+*/
+fieldset {
+	border:0;
+	padding:0; margin:0;
+}
