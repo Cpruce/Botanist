@@ -17,6 +17,7 @@
     "mongoose": "*",
     "monk": "*",
     "morgan": "*",
-    "serve-favicon": "*"
+    "serve-favicon": "*",
+    "d3": "*"
   }
 }

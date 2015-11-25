@@ -21,7 +21,11 @@ class APKInfo(object):
         self.libs = []
         
         for fname in self.apk.get_files():
-            print fname[-3:]
+            
             if fname[:3] == 'lib' and fname[-3:] == '.so':
-                self.libs.append(LibSO(fname, self.apk))
+                lib = LibSO(fname, self.apk) 
+                
+                # keep only tools directly loaded using JNI_OnLoad
+                if lib.mnemonics != []:
+                    self.libs.append(lib)
 

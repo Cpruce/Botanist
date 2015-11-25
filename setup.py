@@ -16,8 +16,7 @@ def try_build():
             packages = find_packages(),
             scripts = ['bottools/api/APKInfo.py', 'bottools/api/LibSO.py',
                        'bottools/tag/DexTagger.py', 'bottools/tag/ElfTagger.py', 
-                       'bottools/classify/Classifier.py', 
-                       'bottools/control/Controller.py', ],
+                       'bottools/control/MongoController.py', ],
             platforms='Cross Platform',
             classifiers = [
                         'Programming Language :: Python :: 2',

@@ -38,8 +38,9 @@ def main(options, arguments):
 
             apk_info = APKInfo(options.file)
 
+            print "\nSignatures\n"+10*'-'
             for so_lib in apk_info.libs:
-                print so_lib.sig
+                print so_lib.so_file_name + ': ' + str(so_lib.mnemonics)
 
         else:
             print "Unknown file type"

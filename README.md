@@ -18,14 +18,19 @@ along with variations that exist in the wild. The main function takes in an APK
 and says what tools were used, if previously seen. This project assumes data on
 several instances and the ability to store instances for future reference.
 
+## Web Service
+
+If the user's intent is to store lots of APK's and do analyses via a service,
+   go to the readme in the webservice directory.
+
 ### Dependencies
 
 Botanist uses:
 
-* Androguard, currently using stable release v2.0 aka version 3.0, for apk/dex analysis
-* radare2 python bindings for elf analysis
-* MySQL for non-volatile storage of clusters
-* python-mysql for interaction with past instances and storing purposes
+* Androguard - https://github.com/androguard/androguard/releases/tag/v2.0
+* r2pipe - pip install r2pipe
+* MySQL <i>OR</i> MongoDB 
+* python-mysql <i>OR</i> pymongo - pip install <i>python_driver</i>
 
 
 ### Components
@@ -34,9 +39,8 @@ Botanist uses:
 
 1. <i>APKInfo</i> - contains apk name, architecture, shared object files, and
    the library signatures
-2. <i>SOFile</i> - contains information on the shared object file
-3. <i>ToolSig</i> - contains a signature of a particular dynamic library, the
-   name of that library, and the name of the APK
+2. <i>LibSO</i> - contains information on the shared object file, including a
+   signature
 3. <i> Controller.py </i> - adds signatures to the db if doesn't already exist and assigns a cluster 
 
 #### Scripts
@@ -46,19 +50,11 @@ Botanist uses:
    method called in the dynamically-loaded library. <i>ElfTagger.py</i>
    continues by dumping the .so files, finding the first call into the library
    after the System.loadLibrary call, and creates a signature based on the
-   first 40 opcodes of the initializing method.
+   opcodes of the initializing method.
 2. <i> Classifying </i> - provides the interface between the Tagger and Controller
-
-### Tested Architectures
-
-          
- ARM | ARM64 | x86 | x64 | MIPS
-----------------------------------
- initial test |       |     |     |
-    
 
 ### Setup
 
 1. ```sudo python setup.py install```
-2. ```python bottools/tag/ElfTagger.py -f test/Xamarin/com.revengdroid.XamarinHelloWorld.apk | python bottools/classify/Classifier.py -u {USERNAME} -p {PASSWORD}```
+2. ```python bottools/tag/ElfTagger.py -f test/Xamarin/com.revengdroid.XamarinHelloWorld.apk | python bottools/control/MongoController.py -a```
 

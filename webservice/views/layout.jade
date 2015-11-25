@@ -1,0 +1,21 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        //meta( content='text/html', charset='utf-8', http-equiv='Content Type' )
+        meta( content='utf-8', http-equiv='encoding' )
+        meta( http-equiv='X-UA-Compatible', content='IE=edge' )
+        meta( name='viewport', content='width=device-width, initial-scale=1.0' )
+        
+        //- Bootswatch Theme
+        link(href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.0/flatly/bootstrap.min.css", rel="stylesheet")
+    body
+        block content
+        script(src='http://code.jquery.com/jquery-1.11.3.min.js')
+       
+        // http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js')
+        script(src='/javascripts/global.js')
+        script( src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js' )
+
+        include index.html

@@ -16,7 +16,7 @@ import sys
 import fileinput
 from optparse import OptionParser
 
-import bottools.control.Controller as mdb
+import bottools.control.MongoController as MongoController
 
 option_0 = {
     'name': ('-f', '--file'),
@@ -40,7 +40,26 @@ option_3 = {
 }
 options = [option_0, option_1, option_2, option_3]
 
-# Create Classification class
+# Tapered Levenshtein for mnemonic signatures
+def tapered_levenshtein(sig1, sig2):
+    sig1_mnemonics = sig1.split()
+    sig2_mnemonics = sig2.split()
+    position = 0
+    num_mnemonics = len(sig1_mnemonics) #assumption len(sig1) == len(sig2)
+    weight = 1.0 - position/num_mnemonics
+    distance = 0.0
+
+    for mn1, mn2 in sig1_mnemonics, sig2_mnemonics:
+        if mn1 != mn2:
+            distance+=weight
+
+        position+=1
+        weight = 1.0 - position/num_mnemonics
+
+    return distance
+
+# Compare hash of specific symbols
+
 
 def main(options, arguments):
 
@@ -60,7 +79,7 @@ def main(options, arguments):
             pwd = ""
 
         print uname, pwd
-        mdb.test_and_connect(uname, pwd, sig)
+        MongoController.test_and_connect(uname, pwd, sig)
 
 
 if __name__ == "__main__":

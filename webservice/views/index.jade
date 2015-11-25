@@ -1,1 +1,19 @@
-include index.html
+include mixins
+extends layout
+
+block content
+    h1= title
+    img(src="/img/botanist.png", style="position:absolute; top:0px; right:0px")
+    h4 APK Toolchain Fingerprinting
+
+    //+bootswatch("lumen")
+    //+bootswatch("slate")
+    //+bootswatch("cosmos")  
+    +bootswatch("cerulean")      
+  
+    +nav("BT", "dropdown_menu")
+        +nav_item( "/", "active" ) Home
+        +nav_item( "search" ) Search
+        +nav_item( "upload" ) Upload
+        +nav_item( "stats" ) Statistics
+
