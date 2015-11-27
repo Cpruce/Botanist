@@ -11,6 +11,7 @@
 import os
 import sys
 import r2pipe
+import hashlib
 from androguard.core.bytecodes.apk import *
 
 class LibSO(object):
@@ -20,23 +21,32 @@ class LibSO(object):
 
     def __init__(self, so_file_name, apk):
 
+        # set apk parent name
+        self.apk_filename = apk.get_filename()
+
         # dump so_file for further analysis
         self.dump_file(so_file_name, apk)
 
         # extract name from apk path
         self.so_file_name = so_file_name.split('/')[2]
 
-
         r2 = r2pipe.open('test/' + self.so_file_name)
 
         # build signature from JNI_OnLoad mnemonics
         self.build_signature(r2)
 
-        for m in self.mnemonics:
-            print m,
+        self.build_hash()
 
         # build symbol table
         #self.get_symbols(r2)
+
+    def build_hash(self):
+        mstr = ''
+        for m in self.mnemonics:
+            mstr += m
+
+        # set hash
+        self.sha1 = hashlib.sha1(mstr).hexdigest()
 
     def get_symbols(self, r2):
         # get symbols
@@ -55,8 +65,8 @@ class LibSO(object):
         # create signature from JNI_OnLoad fcn
         try:
             asm_lines = r2.cmd('aa; s sym.JNI_OnLoad; pdf').split('\n')
-            
-            
+
+
             self.mnemonics = []
 
             if asm_lines == '':
@@ -64,11 +74,12 @@ class LibSO(object):
                 return
 
             for line in asm_lines:
+                print line
 
                 if line[0] == '/':
                     # start mnemonic parse next line
-                    print line
-
+                    #print line
+                    pass
                 elif line[0] == '\\':
                     # end JNI_OnLoad parse
                     instr = line.split()
@@ -80,11 +91,13 @@ class LibSO(object):
                     # else |, keep parsing
                     instr = line.split()
 
-                    if len(instr[1]) < 3 and instr[1] != ';':
-                        # conditional, mnemonic is one over
-                        self.mnemonics.append(instr[4])
-                    elif len(instr[1]) > 3:
-                        self.mnemonics.append(instr[3])
+                    if 'XREF' not in instr:
+                        if len(instr[1]) < 3:
+                            # conditional, mnemonic is one over
+                            self.mnemonics.append(instr[4])
+                        elif len(instr[1]) > 3:
+                            self.mnemonics.append(instr[3])
+
         except Exception:
             return
 

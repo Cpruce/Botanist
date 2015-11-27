@@ -7,12 +7,12 @@
  * */
 
 conn = new Mongo();
-db = connect("SignatureDB");
+db = connect("BotanistDB");
 
 // clear collections if already exist. 
 // REMOVE after adding actual data
 db.users.remove({});
-db.instances.remove({});
+db.clusters.remove({});
 
 db.users.insert({
     'username' : 'Cpruce',
@@ -30,29 +30,27 @@ db.users.insert({
     'password': 'a13raKadabra'
 });
 
-db.instances.insert({
-    'instance_id' : 1,
+db.clusters.insert({
     'so_file_name' : 'monodroid', 
     'apks_found_in' : ['XamarinHelloWorld'],
-    'specific_symbols_list' : [],
     'hash' : '',
     'jni_onload_info': {
-        'signature' : '',
+        'signature' : [],
         'is_cluster_center' : true,
-        'distance_from_center' : 0.0
+        'distance_from_center' : 0.0,
+        'variations': ['monodroid2']
     }
 });
 
-db.instances.insert({
-    'instance_id' : 2,
+db.clusters.insert({
     'so_file_name' : 'monodroid2', 
     'apks_found_in' : ['XamarinHelloWorld'],
-    'specific_symbols_list' : [],
     'hash' : '',
     'jni_onload_info': {
-        'signature' : '',
-        'is_cluster_center' : true,
-        'distance_from_center' : 0.0
+        'signature' : [],
+        'is_cluster_center' : false,
+        'distance_from_center' : 0.1,
+        'variations': []
     }
 });
 

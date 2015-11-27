@@ -3,128 +3,157 @@
 #
 #   Part of the RevEngdroid project
 #
-#
 #   The controller program provides the API for operations on the MongoDB table.
-#
+#   Mongo creates the collection upon first insertion if collection does not
+#   already exist.
 
+import sys
+import json
 import pymongo
+from bottools.api.Classifier import tapered_levenshtein
+from bottools.api.LibSO import LibSO
 
-def table_add(cur, params, db):
+################# Intended Interface #######################
 
-    query = """INSERT INTO signatures VALUES(%s, %s, %s);"""
+def insert_instance(so_inst):
+
+    res = test_and_connect()
+
+    if res == None:
+        print 'Could not connect to mongodb. Is mongod running on port 27017?'
+        return
+
+    (clusters, botdb, mclient) = res
+
+    # find place in clusters, or create another
+    find_placement(clusters, so_inst)
+
+    mclient.close()
+
+def get_clusters():
+
+    res = test_and_connect()
+
+    if res == None:
+        print 'Could not connect to mongodb. Is mongod running on port 27017?'
+        return
+
+    (clusters, botdb, mclient) = res
+
+    # gather cluster id's to determine if part of an existing cluster
+    clusters_centers = clusters.find(
+        {'jni_onload_info.is_cluster_center': True})
+
+    for center in clusters_centers:
+        print center
+
+    mclient.close()
+
+################### Direct MongoDB Functions ####################
+
+def test_and_connect():
     try:
-       cur.execute(query, params)
-       db.commit()
-    except:
-        db.rollback()
+        # hardcoded test config
+        mclient = pymongo.MongoClient('mongodb://localhost:27017')
 
+        db = connect_db(mclient)
+        clusters = connect_collection(db)
+        return (clusters, db, mclient)
 
-def has_table(cur):
+    except pymongo.errors.PyMongoError:
+        return None
 
-    cur.execute("SHOW tables;", [])
-
-    if cur.rowcount > 0:
-        for row in cur.fetchall():
-            # assuming the table name is signatures
-            if "signatures" in row[0]:
-                db.close()
-                return True
-
-    return False
-
-def create_index(cur):
-    result = db.instances.create_index([('instance_id', pymongo.ASCENDING)], unique=True)
-
-def create_table(cur):
-
-    query = "CREATE TABLE signatures (signature VARCHAR(300) DEFAULT NULL, cluster_id VARCHAR(300) DEFAULT NULL, distance FLOAT, PRIMARY KEY (signature), UNIQUE(signature)) ENGINE=InnoDB;"
-
-    cur.execute(query, ())
-    print 'Table created'
-
-
-def find_cluster(sig, db):
-
-    print "no item found, finding cluster"
-
-    epsilon = 10 # threshold hold that decides clustering
-    distance = 0.0
-    min_cid = ('', 100000000.0)
-    query = "SELECT cluster_id FROM signatures;"
-    cluster_ids = [] # store tuples of cluster_ids + distances
-    cur.execute(query, ());
-
-    if cur.rowcount > 0:
-        for row in cur.fetchall():
-            cluster_id = row['cluster_id']
-            print 'cluster_id is ' + cluster_id
-
-            distance = tapered_levenshtein(sig, cluster_id)
-            cluster_ids.append((cluster_id, distance))
-
-            if distance < min_cid[1]:
-                min_cid = (cluster_id, distance)
-
-        if epsilon <= min_cid[1]:
-            params = (sig, sig, 0.0)
-            table_add(cur, params, db)
-        else:
-            params = (sig, min_cid[0], min_cid[1])
-            table_add(cur, params, db)
-    else:
-        params = (sig, sig, 0.0)
-        table_add(cur, params, db)
-
-def find_placement(cur, sig):
-
-    db = get_sig_table_handler()
-
-    query = "SELECT * FROM signatures WHERE signature = '" + sig + "';"
-    cur.execute(query, ())
-
-    if cur.rowcount > 0:
-        # signature already exists, print contents
-        row = cur.fetchall()
-        print "Signature exists"
-        print row
-    else:
-        find_cluster(cur, sig, db)
-    
-    db.close()
-
-def test_and_connect(sig):#uname, pwd, sig):
-    table_exists = False
+def connect_db(mclient):
 
     try:
-        db = pymongo.MongoClient('mongodb://localhost:27017/SignaturesDB')
-        instances = db['instances']
+        # TODO: add db.authenticate(username, password...) around here
+        # for convenience during dev, this will be left out
 
-        table_exists = has_table(cur)
+        # ASSUMPTION: this db name is BotanistDB. This can be changed here
+        # and in db_populate.js if another db name is desirable.
+        botDB = mclient['BotanistDB']
+        return botDB
 
-        if table_exists == False:
-            create_table(cur)
-            params = (sig, sig, 0.0)
-            table_add(cur, params, db)
+    except pymongo.errors.InvalidName:
+
+        # BotanistDB does not exist. Create a new instance.
+        botDB = pymongo.database.Database(mclient, 'BotanistDB')
+        return botDB
+
+def connect_collection(db):
+
+    try:
+        # ASSUMPTION: collection name is called clusters. Like with the db
+        # name, this can be changed.
+        clusters = db['clusters']
+        return clusters
+
+    except pymongo.errors.InvalidName:
+
+        # since InvalidName was raised, CollectionInvalid signifying existence
+        # shouldn't be raised.
+        db.create_collection('clusters')
+        clusters = db['clusters']
+        return clusters
+
+#def create_index(db):
+#    result = db.instances.create_index([('cluster_id', pymongo.ASCENDING)], 
+# unique=True)
+
+############### Clustering Logic ###################
+
+def find_placement(clusters, so_inst):
+
+    # if exact copy exists, 
+    incumbant = clusters.find_one({'hash':so_inst.sha1})
+
+    # found exact copy
+    if incumbant != None:
+        # did not find association with current apk
+        if so_inst.apk_filename not in incumbant['apks_found_in']:
+            instance = clusters.find_one_and_update({'hash':so_inst.sha1}, 
+                                                    {$push:{'apks_found_in': 
+                                                    so_inst.apk_filename}})
+        return 
+
+    # gather cluster id's to determine if part of an existing cluster
+    clusters_centers = clusters.find(
+        {'jni_onload_info.is_cluster_center': True})
+
+    for center in clusters_centers:
+        center_obj = json.load(center)
+
+        # calculate weight distance based on the shorter lengthed signature
+        # TODO: Remove similar code at the start of JNI_OnLoad's
+        (distance, num_mnemonics) = tapered_levenshtein(
+            center_obj["jni_onload_info"]["signature"], so_inst.mnemonics)
+
+        # calc similarity with center
+        similarity = 1.0 - distance/num_mnemonics
+
+        if similarity >= 0.9:
+            # found cluster, end search
+            # TODO: switch to insert_many with large amounts of apks
+            instance = 
+                clusters.insert_one({'so_file_name': so_inst.so_file_name,
+                                     'apks_found_in':[so_inst.apk_filename],
+                                     'hash': so_inst.sha1,
+                                     'jni_onload_info': {
+                                        'signature': so_inst.mnemonics,
+                                        'is_cluster_center': False,
+                                         'similarity_with_center': similarity,
+                                         'variations': []
+                                      })
             return
 
-        find_placement(cur, sig, db)
-        db.close()
-
-    except MySQLdb.Error, (i, e):
-
-        if "Unknown database" in e:
-            con = MySQLdb.connect(user="root", passwd="password")
-            cur = con.cursor()
-            cur.execute('CREATE DATABASE signatureDB;')
-            print "signatureDB created"
-            cur.execute("USE signatureDB;")
-
-            create_table(cur)
-            params = (sig, sig, 0.0)
-            table_add(cur, params, con)
-        else:
-            print (i, e)
-
-def insert_sig(sig):
-    test_and_connect(sig)
-
+    # else form own cluster
+    instance = clusters.insert_one({'so_file_name': so_inst.so_file_name,
+                                     'apks_found_in':[so_inst.apk_filename],
+                                     'hash': so_inst.sha1,
+                                     'jni_onload_info': {
+                                        'signature': so_inst.mnemonics,
+                                        'is_cluster_center': True,
+                                         'similarity_with_center': 1.0,
+                                         'variations': []
+                                      })
+ 

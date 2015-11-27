@@ -12,6 +12,7 @@
 
 import sys
 from bottools.api.APKInfo import APKInfo
+from bottools.control.MongoController import insert_instance
 from optparse import OptionParser
 from androguard.core.androconf import *
 
@@ -28,12 +29,12 @@ option_1 = {
 
 options = [option_0, option_1]
 
-
 def main(options, arguments):
     if options.file != None:
-        # add in checks for malformed input here
+
         ret_type = is_android(options.file)
 
+        # only work on APK's
         if ret_type == "APK":
 
             apk_info = APKInfo(options.file)
@@ -41,11 +42,11 @@ def main(options, arguments):
             print "\nSignatures\n"+10*'-'
             for so_lib in apk_info.libs:
                 print so_lib.so_file_name + ': ' + str(so_lib.mnemonics)
+                insert_instance(so_lib)
 
         else:
             print "Unknown file type"
             return
-
 
 if __name__ == "__main__":
     parser = OptionParser()
