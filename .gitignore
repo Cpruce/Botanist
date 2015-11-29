@@ -2,3 +2,7 @@
 botanist.egg-info/
 build/
 dist/
+dashboard/bin
+dashboard/build
+dashboard/dist
+.ropenproject
