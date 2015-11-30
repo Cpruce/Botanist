@@ -112,7 +112,7 @@ def find_placement(clusters, so_inst):
         # did not find association with current apk
         if so_inst.apk_filename not in incumbant['apks_found_in']:
             instance = clusters.find_one_and_update({'hash':so_inst.sha1}, 
-                                                    {$push:{'apks_found_in': 
+                                                    {'$push':{'apks_found_in': 
                                                     so_inst.apk_filename}})
         return 
 
@@ -134,8 +134,7 @@ def find_placement(clusters, so_inst):
         if similarity >= 0.9:
             # found cluster, end search
             # TODO: switch to insert_many with large amounts of apks
-            instance = 
-                clusters.insert_one({'so_file_name': so_inst.so_file_name,
+            instance = clusters.insert_one({'so_file_name': so_inst.so_file_name,
                                      'apks_found_in':[so_inst.apk_filename],
                                      'hash': so_inst.sha1,
                                      'jni_onload_info': {
@@ -143,7 +142,7 @@ def find_placement(clusters, so_inst):
                                         'is_cluster_center': False,
                                          'similarity_with_center': similarity,
                                          'variations': []
-                                      })
+                                      }})
             return
 
     # else form own cluster
@@ -155,5 +154,5 @@ def find_placement(clusters, so_inst):
                                         'is_cluster_center': True,
                                          'similarity_with_center': 1.0,
                                          'variations': []
-                                      })
+                                      }})
  
