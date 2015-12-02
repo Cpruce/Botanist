@@ -17,13 +17,15 @@ def tapered_levenshtein(sig1, sig2):
     sig1_mnemonics = sig1
     sig2_mnemonics = sig2
     position = 0
+    if len(sig1_mnemonics) == 0 or len(sig2_mnemonics) == 0:
+        return (-1.0, -1)
     if len(sig1_mnemonics) < len(sig2_mnemonics):
-        num_mnemonics = len(sig1_mnemonics)  
-    else: 
+        num_mnemonics = len(sig1_mnemonics)
+    else:
         num_mnemonics = len(sig2_mnemonics)
                     # assumption len(sig1) == len(sig2)
 
-    weight = 1.0 - position/num_mnemonics
+    weight = 1.0 - float(position)/num_mnemonics
     distance = 0.0
 
     for mn1, mn2 in zip(sig1_mnemonics, sig2_mnemonics):
@@ -31,7 +33,7 @@ def tapered_levenshtein(sig1, sig2):
             distance+=weight
 
         position+=1
-        weight = 1.0 - position/num_mnemonics
+        weight = 1.0 - float(position)/num_mnemonics
 
     return (distance, num_mnemonics)
 

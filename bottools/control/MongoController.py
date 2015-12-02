@@ -54,13 +54,14 @@ def get_clusters():
 def test_and_connect():
     try:
         # hardcoded test config
-        mclient = pymongo.MongoClient('mongodb://localhost:27017')
+        mclient = pymongo.MongoClient('mongodb://localhost:27017/')
 
         db = connect_db(mclient)
         clusters = connect_collection(db)
         return (clusters, db, mclient)
 
-    except pymongo.errors.PyMongoError:
+    except pymongo.errors.PyMongoError as e:
+        print e
         return None
 
 def connect_db(mclient):
@@ -74,8 +75,8 @@ def connect_db(mclient):
         botDB = mclient['BotanistDB']
         return botDB
 
-    except pymongo.errors.InvalidName:
-
+    except pymongo.errors.InvalidName as e:
+        print e
         # BotanistDB does not exist. Create a new instance.
         botDB = pymongo.database.Database(mclient, 'BotanistDB')
         return botDB
@@ -88,72 +89,59 @@ def connect_collection(db):
         clusters = db['clusters']
         return clusters
 
-    except pymongo.errors.InvalidName:
-
+    except pymongo.errors.InvalidName as e:
+        print e
         # since InvalidName was raised, CollectionInvalid signifying existence
         # shouldn't be raised.
         db.create_collection('clusters')
         clusters = db['clusters']
         return clusters
 
-#def create_index(db):
-#    result = db.instances.create_index([('cluster_id', pymongo.ASCENDING)], 
-# unique=True)
-
 ############### Clustering Logic ###################
 
 def find_placement(clusters, so_inst):
 
-    # if exact copy exists, 
-    incumbant = clusters.find_one({'hash':so_inst.sha1})
-
-    # found exact copy
-    if incumbant != None:
-        # did not find association with current apk
-        if so_inst.apk_filename not in incumbant['apks_found_in']:
-            instance = clusters.find_one_and_update({'hash':so_inst.sha1}, 
-                                                    {$push:{'apks_found_in': 
-                                                    so_inst.apk_filename}})
-        return 
+    # if name exists,
+    try:
+        incumbant = clusters.find_one({'so_file_name':so_inst.so_file_name})
+        # found copy by name
+        if incumbant != None:
+            # did not find association with current apk
+            if so_inst.apk_filename not in incumbant['apks_found_in']:
+                
+                instance = clusters.find_one_and_update({'so_file_name':so_inst.so_file_name}, { '$push': { 'apks_found_in' : so_inst.apk_filename } })
+                print 'added to existing record'
+                return
+        
+    except Exception as e:
+        print e
 
     # gather cluster id's to determine if part of an existing cluster
-    clusters_centers = clusters.find(
-        {'jni_onload_info.is_cluster_center': True})
+    try:
+        clusters_centers = clusters.find({'jni_onload_info.is_cluster_center': True})
+        for center_obj in clusters_centers:
+            
+            # calculate weight distance based on the shorter lengthed signature
+            # TODO: Remove similar code at the start of JNI_OnLoad's
+            (distance, num_mnemonics) = tapered_levenshtein(center_obj["jni_onload_info"]["signature"], so_inst.mnemonics)
+        
+            if distance != -1.0:
+                print 'no mnemonics'
+                break
+            
+            # calc similarity with center
+            similarity = 1.0 - float(distance)/num_mnemonics
 
-    for center in clusters_centers:
-        center_obj = json.load(center)
+            if similarity >= 0.9:
+                # found cluster, end search
+                # TODO: switch to insert_many with large amounts of apks
+                instance = clusters.insert_one({'so_file_name': so_inst.so_file_name, 'arch': so_inst.arch, 'apks_found_in':[so_inst.apk_filename], 'hash': so_inst.sha1, 'jni_onload_info': {'signature': so_inst.mnemonics,'is_cluster_center': False, 'similarity_with_center': similarity, 'variations': [] } })
+                print 'added to existing cluster'
+                return
+        
 
-        # calculate weight distance based on the shorter lengthed signature
-        # TODO: Remove similar code at the start of JNI_OnLoad's
-        (distance, num_mnemonics) = tapered_levenshtein(
-            center_obj["jni_onload_info"]["signature"], so_inst.mnemonics)
-
-        # calc similarity with center
-        similarity = 1.0 - distance/num_mnemonics
-
-        if similarity >= 0.9:
-            # found cluster, end search
-            # TODO: switch to insert_many with large amounts of apks
-            instance = 
-                clusters.insert_one({'so_file_name': so_inst.so_file_name,
-                                     'apks_found_in':[so_inst.apk_filename],
-                                     'hash': so_inst.sha1,
-                                     'jni_onload_info': {
-                                        'signature': so_inst.mnemonics,
-                                        'is_cluster_center': False,
-                                         'similarity_with_center': similarity,
-                                         'variations': []
-                                      })
-            return
-
-    # else form own cluster
-    instance = clusters.insert_one({'so_file_name': so_inst.so_file_name,
-                                     'apks_found_in':[so_inst.apk_filename],
-                                     'hash': so_inst.sha1,
-                                     'jni_onload_info': {
-                                        'signature': so_inst.mnemonics,
-                                        'is_cluster_center': True,
-                                         'similarity_with_center': 1.0,
-                                         'variations': []
-                                      })
- 
+        # else form own cluster
+        instance = clusters.insert_one({'so_file_name': so_inst.so_file_name, 'arch': so_inst.arch, 'apks_found_in':[so_inst.apk_filename], 'hash': so_inst.sha1, 'jni_onload_info': { 'signature': so_inst.mnemonics, 'is_cluster_center': True, 'similarity_with_center': 1.0, 'variations': [] } })
+        print 'created new cluster'
+    except Exception as e:
+        print e

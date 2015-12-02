@@ -12,7 +12,20 @@ import os
 import sys
 import r2pipe
 import hashlib
+from elftools.elf.elffile import ELFFile
 from androguard.core.bytecodes.apk import *
+
+def parse_arch(arch):
+    if arch == 'EM_X86_64':
+        return 'x64'
+    elif arch in ('EM_386', 'EM_486'):
+        return 'x86'
+    elif arch == 'EM_ARM':
+        return 'ARM'
+    elif arch == 'EM_AARCH64':
+        return 'AArch64'
+    elif arch == 'EM_MIPS':
+        return 'MIPS' 
 
 class LibSO(object):
     """
@@ -22,13 +35,17 @@ class LibSO(object):
     def __init__(self, so_file_name, apk):
 
         # set apk parent name
-        self.apk_filename = apk.get_filename()
+        self.apk_filename = apk.get_filename().split('/')[-1]
 
         # dump so_file for further analysis
         self.dump_file(so_file_name, apk)
 
         # extract name from apk path
-        self.so_file_name = so_file_name.split('/')[2]
+        self.so_file_name = so_file_name.split('/')[-1]
+
+        with open('test/'+self.so_file_name, 'rb') as f:
+            elffile = ELFFile(f)
+            self.arch = parse_arch(elffile.header.e_machine)
 
         r2 = r2pipe.open('test/' + self.so_file_name)
 
@@ -64,39 +81,53 @@ class LibSO(object):
 
         # create signature from JNI_OnLoad fcn
         try:
+
+            # use the r2 commands thru r2pipe to analysis, search for
+            # JNI_OnLoad, and print the function into asm_lines
             asm_lines = r2.cmd('aa; s sym.JNI_OnLoad; pdf').split('\n')
 
+            # TODO: r2 doesn't translate all x86 correctly. handle errs
 
             self.mnemonics = []
 
-            if asm_lines == '':
-                print 'JNI_OnLoad not found'
-                return
+            # signature will be the length of the function or the first 100 op's
+            count = 0
+            threshold = 99
 
             for line in asm_lines:
                 print line
-
                 if line[0] == '/':
+                    if 'JNI_OnLoad' not in line:
+                        break
                     # start mnemonic parse next line
                     #print line
                     pass
-                elif line[0] == '\\':
+                # end on function limit or threshold
+                elif line[0] == '\\' or count == threshold:
                     # end JNI_OnLoad parse
                     instr = line.split()
-
-                    self.mnemonics.append(instr[3])
-
+                    mnemonic = instr[3].strip()
+                    self.mnemonics.append(mnemonic)
                     break
                 else:
                     # else |, keep parsing
                     instr = line.split()
 
                     if 'XREF' not in instr:
+
                         if len(instr[1]) < 3:
+
                             # conditional, mnemonic is one over
-                            self.mnemonics.append(instr[4])
-                        elif len(instr[1]) > 3:
-                            self.mnemonics.append(instr[3])
+                            mnemonic = instr[4].strip()
+                        else:
+                            mnemonic = instr[3].strip()
+
+                        if 'invalid' in mnemonic:
+                            break
+
+                        self.mnemonics.append(mnemonic)
+
+                count += 1
 
         except Exception:
             return
@@ -110,8 +141,8 @@ class LibSO(object):
         path_components = fname.split('/')
         fname = 'test/' + path_components[-1]
 
-        print ("\nDumping %s to test/" % fname)
-        print (22+len(fname))*'-'
+        print ("\n    Dumping %s to test/" % fname)
+        print (" "*4) + (18+len(fname))*'-'
 
         try:
             os.remove(fname)

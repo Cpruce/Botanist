@@ -36,16 +36,19 @@ def main(options, arguments):
 
         # only work on APK's
         if ret_type == "APK":
+            apk_name = options.file
 
             apk_info = APKInfo(options.file)
 
-            print "\nSignatures\n"+10*'-'
+            name_without_path = apk_name.split("/")[-1]
+
+            print "\nSignatures for " + name_without_path + "\n" +(15+len(name_without_path))*'-'
             for so_lib in apk_info.libs:
-                print so_lib.so_file_name + ': ' + str(so_lib.mnemonics)
+                print so_lib.so_file_name + ' (' + so_lib.arch + '): ' + str(so_lib.mnemonics) 
                 insert_instance(so_lib)
 
         else:
-            print "Unknown file type"
+            print "Unknown file type: " + options.file
             return
 
 if __name__ == "__main__":
