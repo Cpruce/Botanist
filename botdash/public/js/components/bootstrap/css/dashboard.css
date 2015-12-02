@@ -1,0 +1,7 @@
+#powerConsumptionMonitorPanel .nv-chart svg {
+  height: 500px;
+}
+
+#powerConsumptionPieChart .nv-chart svg {
+  height: 500px;
+}
