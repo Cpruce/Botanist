@@ -10,22 +10,21 @@ class APKInfo(object):
     def __init__(self, apk_name):
 
         # use androguard to get apk
-        self.apk = APK(apk_name)
-
+        apk = APK(apk_name)
+        self.apk_name = apk.filename.split("/")[-1]
+        self.package = apk.package
+        self.permissions = apk.permissions
         ##### bottools fields #####
 
         # hash of the apk file
-        self.sha1 = hashlib.sha1(self.apk.get_raw()).hexdigest()
+        self.sha1 = hashlib.sha1(apk.get_raw()).hexdigest()
 
         # shared object dynamic library objects that contain signatures
         self.libs = []
-        
-        for fname in self.apk.get_files():
-            
+
+        for fname in apk.get_files():
+
             if fname[:3] == 'lib' and fname[-3:] == '.so':
-                lib = LibSO(fname, self.apk) 
-                
-                # keep only tools directly loaded using JNI_OnLoad
-                if lib.mnemonics != []:
-                    self.libs.append(lib)
+                lib = LibSO(fname, apk)
+                self.libs.append(lib)
 

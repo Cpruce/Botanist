@@ -20,6 +20,8 @@
     <!-- Custom Fonts -->
     <link href="../bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
+    
+
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -28,7 +30,38 @@
     <![endif]-->
 
 </head>
+<style media="screen" type="text/css">
+    #visualization {
+        overflow: auto;
+        border: 5px solid transparent;
+    }
+    circle.node {
+        cursor: pointer;
+        stroke: #000;
+        stroke-width: .5px;
+    }
 
+    circle.node.directory {
+        stroke: #9ecae1;
+        stroke-width: 2px;
+    }
+
+        circle.node.collapsed {
+          stroke: #555;
+        }
+
+        .nodetext {
+          fill: #252929;
+          font-weight: bold;
+          text-shadow: 0 0 0.2em white;
+        }
+
+        line.link {
+          fill: none;
+          stroke: #9ecae1;
+          stroke-width: 1.5px;
+        }
+</style>
 <body>
 
     <div id="wrapper">
@@ -44,19 +77,69 @@
                 <!-- /.col-lg-12 -->
             </div>
 
-            <!-- /.row for HH aggregate status-->
-            <div class="row" id="react-HHStatusPannel">
+            <div class="row">
+               <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div id="visualization" ></div>
+                        <script>
+                            var myFlower = new CodeFlower("#visualization", 800, 200);
+                            myflower.update(jsonData);
+                        </script>                           
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+   
             </div>
-
-            <!-- /.row for aggregate price monitoring-->
-            <div class="row" id="react-PowerConsumptionMonitorPanel">
-            </div>
+           
 
             <!-- /.row -->
         </div>
         <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
+
+    <script type="text/javascript" src="../dist/js/d3/d3.js"></script>
+    <script type="text/javascript" src="../dist/js/d3/d3.geom.js"></script>
+    <script type="text/javascript" src="../dist/js/d3/d3.layout.js"></script>
+    <script type="text/javascript" src="../dist/js/CodeFlower.js"></script>
+    <script type="text/javascript" src="../dist/js/dataConverter.js"></script>
+    <!-- CodeFlower -->
+    <script type="text/javascript">
+      var currentCodeFlower;
+      var createCodeFlower = function(json) {
+        // update the jsonData textarea
+        //document.getElementById('jsonData').value = JSON.stringify(json);
+        // remove previous flower to save memory
+        if (currentCodeFlower) currentCodeFlower.cleanup();
+        // adapt layout size to the total number of elements
+        var total = countElements(json);
+        w = parseInt(Math.sqrt(total) * 30, 10);
+        h = parseInt(Math.sqrt(total) * 30, 10);
+        // create a new CodeFlower
+        currentCodeFlower = new CodeFlower("#visualization", w, h).update(json);
+      };
+
+      d3.json('data.json', createCodeFlower);
+
+      /*document.getElementById('project').addEventListener('change', function() {
+        d3.json(this.value, createCodeFlower);
+      });*/
+      /*document.getElementById('jsonInput').addEventListener('submit', function(e) {
+        e.preventDefault();
+        document.getElementById('visualization').scrollIntoView();
+        var json = JSON.parse(document.getElementById('jsonData').value);
+        currentCodeFlower.update(json);
+      });*/
+      /*document.getElementById('jsonConverter').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var origin = this.children[0].children[0].value;
+        var data = this.children[0].children[1].value;
+        var json = convertToJSON(data, origin);
+        document.getElementById('visualization').scrollIntoView();
+        createCodeFlower(json);
+      });*/
+    </script>
 
     <!-- jQuery -->
     <script src="../bower_components/jquery/dist/jquery.min.js"></script>

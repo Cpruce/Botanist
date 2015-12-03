@@ -25,7 +25,9 @@ def parse_arch(arch):
     elif arch == 'EM_AARCH64':
         return 'AArch64'
     elif arch == 'EM_MIPS':
-        return 'MIPS' 
+        return 'MIPS'
+    else:
+        return ''
 
 class LibSO(object):
     """
@@ -95,7 +97,7 @@ class LibSO(object):
             threshold = 99
 
             for line in asm_lines:
-                print line
+                
                 if line[0] == '/':
                     if 'JNI_OnLoad' not in line:
                         break

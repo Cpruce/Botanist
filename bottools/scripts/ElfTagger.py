@@ -12,7 +12,7 @@
 
 import sys
 from bottools.api.APKInfo import APKInfo
-from bottools.control.MongoController import insert_instance
+from bottools.control.MongoController import insert_apk_instance, insert_dummy_apk_instance, insert_lib_instance
 from optparse import OptionParser
 from androguard.core.androconf import *
 
@@ -34,22 +34,28 @@ def main(options, arguments):
 
         ret_type = is_android(options.file)
 
+        apk_name = options.file
+
+        name_without_path = apk_name.split("/")[-1]
+
         # only work on APK's
         if ret_type == "APK":
-            apk_name = options.file
 
             apk_info = APKInfo(options.file)
 
-            name_without_path = apk_name.split("/")[-1]
-
             print "\nSignatures for " + name_without_path + "\n" +(15+len(name_without_path))*'-'
             for so_lib in apk_info.libs:
-                print so_lib.so_file_name + ' (' + so_lib.arch + '): ' + str(so_lib.mnemonics) 
-                insert_instance(so_lib)
+                
+                print so_lib.so_file_name + ' (' + so_lib.arch + '): ' + str(so_lib.mnemonics)
+                
+                insert_lib_instance(so_lib)
+                
+
+            insert_apk_instance(apk_info)
 
         else:
-            print "Unknown file type: " + options.file
-            return
+            print "APK " + options.file + " likely missing"
+            insert_dummy_apk_instance(name_without_path)
 
 if __name__ == "__main__":
     parser = OptionParser()

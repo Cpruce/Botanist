@@ -33,6 +33,11 @@ app.get('/', function(req, res) {
 });
 
 
+app.get('/pages/data.json', function(req, res) {
+    res.sendFile('/home/cory/School/Semester4/MobSec/Project/Botanist/botdash/data.json');
+});
+
+
 /**
 * REST APIs for other applications to feed/retrieve homehub
 * status

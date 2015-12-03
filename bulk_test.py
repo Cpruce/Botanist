@@ -2,9 +2,10 @@
 
 import os
 d = './apks/slides.night-labs.de/apks'
+#d = './malware/slides.night-labs.de/apks'
 i = 0
 for f in os.listdir(d):
-    if i >310:
+    if i >100:
         break
     #print f
     output = os.system("python ./Botanist/bottools/scripts/ElfTagger.py -f " + d + "/" + f)
