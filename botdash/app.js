@@ -26,12 +26,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', function(req, res) {
     res.sendfile('./public/index.html');
 });
 
+
+app.get('/pages/example.json', function(req, res) {
+    res.sendFile('/home/cory/School/Semester4/MobSec/Project/Botanist/botdash/example.json');
+});
+
+app.get('/pages/libs.json', function(req, res) {
+    res.sendFile('/home/cory/School/Semester4/MobSec/Project/libs.json');
+});
 
 app.get('/pages/data.json', function(req, res) {
     res.sendFile('/home/cory/School/Semester4/MobSec/Project/Botanist/botdash/data.json');

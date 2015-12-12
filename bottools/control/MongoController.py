@@ -80,6 +80,26 @@ def get_apks():
     mclient.close()
     return ret
 
+def get_lib(so_lib_sha1):
+
+    res = test_and_connect('libraries')
+
+    if res == None:
+        print 'Could not connect to mongodb. Is mongod running on port 27017?'
+        return
+
+    (libraries, botdb, mclient) = res
+
+    # gather cluster id's to determine if part of an existing cluster
+    so_lib = libraries.find_one({ "sha1":so_lib_sha1})
+
+    #ret = []
+    #for so_lib in so_libs:
+    #    ret.append(so_lib)
+
+    mclient.close()
+    return so_lib
+
 def get_libs():
 
     res = test_and_connect('libraries')
@@ -174,13 +194,13 @@ def add_potential_lib_variation(libraries, so_inst):
 
     # if name exists,
     try:
-        incumbant = libraries.find_one({'so_file_name':so_inst.so_file_name})
+        incumbant = libraries.find_one({'sha1':so_inst.sha1 })
         # found copy by name
         if incumbant != None:
             # did not find association with current apk
             if so_inst.apk_filename not in incumbant['apks_found_in']:
 
-                write_result = libraries.update_one({'so_file_name':so_inst.so_file_name}, { '$push': { 'apks_found_in' : so_inst.apk_filename } } )
+                write_result = libraries.update_one({'sha1':so_inst.sha1}, { '$addToSet': { 'apks_found_in' : so_inst.apk_filename } } )
                 print 'added to existing record'
                 return True
 
@@ -229,6 +249,10 @@ def find_lib_placement(libraries, so_inst):
 
         (closest_relative, max_similarity) = find_lib_cluster_link(so_inst, libs)
 
+        if max_similarity == 1.0:
+            # exact match, don't cause loops
+            return
+
         json_obj = json.loads("{}")
         json_obj['so_file_name'] = so_inst.so_file_name
         json_obj['arch'] = so_inst.arch
@@ -247,7 +271,9 @@ def find_lib_placement(libraries, so_inst):
             json_obj["jni_onload_info"]["is_cluster_center"] = False
             json_obj["jni_onload_info"]["similarity_with_center"] = max_similarity
             so_file_name = json_obj["so_file_name"]
-            write_result = libraries.update_one({'so_file_name':closest_relative}, { "$push" : { 'variations' : so_file_name } })
+            sha1sum = json_obj['sha1']
+            variation = so_file_name + ":" + sha1sum
+            write_result = libraries.update_one({'so_file_name':closest_relative}, { "$addToSet" : { 'variations' : variation } })
             print 'added to existing cluster'
 
         write_result = libraries.insert_one(json_obj)
@@ -257,21 +283,26 @@ def find_lib_placement(libraries, so_inst):
 
 def add_potential_apk_variation(apk, incumbant, apks):
 
-    variation = json.loads('{}')
+    #variation = json.loads('{}')
+    is_variation = False
 
     # see what discrepancies there are and add variation
     if incumbant["package"] != apk.package:
-        variation["package"] = apk.package
+        is_variation = True
+        #variation["package"] = apk.package
     if incumbant["permissions"] != apk.permissions:
-        variation["permissions"] = apk.permissions
+        is_variation = True
+        #variation["permissions"] = apk.permissions
     if incumbant["libs"] != apk.libs:
-        variation["libs"] = apk.libs
+        is_variation = True
+        #variation["libs"] = apk.libs
 
     # if not empty
-    if variation != {}:
+    if is_variation == True:
         # assumption: variation to already in list since
         # sha1 not found
-        write_result = apks.update_one({'apk_name':incumbant["apk_name"], 'sha1': incumbant["sha1"]}, { "$addToSet" : { 'variations' : variation } })
+        variation = incumbant['apk_name'] + ":" + incumbant['sha1']
+        write_result = apks.update_one({'apk_name':incumbant["apk_name"]}, { "$addToSet" : { 'variations' : variation } })
 
     # o.w. do nothing. this is an exact match
 
@@ -284,7 +315,6 @@ def find_apk_cluster_link(apks, apk):
     json_obj['package'] = apk.package
     json_obj['permissions'] = apk.permissions
     json_obj['libs'] = [lib.so_file_name + ":" + lib.arch for lib in apk.libs]
-    print 'libs is ' + str(json_obj['libs'])
     json_obj['present'] = True
 
     # nothing to compare. attach to root
@@ -313,7 +343,8 @@ def find_apk_cluster_link(apks, apk):
                     closest_relative = apk_inst["apk_name"]
                     max_common_libs = num_common_libs
 
-    write_result = apks.update_one({'apk_name':closest_relative}, { "$addToSet" : { 'variations' : json_obj["apk_name"] } })
+    variation = json_obj['apk_name'] + ":" + json_obj['sha1']
+    write_result = apks.update_one({'apk_name':closest_relative}, { "$addToSet" : { 'variations' : variation } })
     write_result = apks.insert_one(json_obj)
 
 
