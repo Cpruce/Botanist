@@ -1,8 +1,6 @@
 # Botanist 
 ## APK toolchain fingerprinting and clustering program
 
-# WORK IN PROGRESS
-
 ### About
 
 Botanist is a program to determine the tools that were used to produce an Android Application Package binary. These include IDE's, packers, compilers, and libraries. The program is split into two parts: creating a set of signatures for a given apk and then integrating that data into the stored collection. 
